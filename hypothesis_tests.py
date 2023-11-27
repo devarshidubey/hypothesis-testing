@@ -4,7 +4,10 @@ from scipy.stats import norm
 import math
 from statsmodels.sandbox.stats.runs import runstest_1samp
 from statsmodels.stats.descriptivestats import sign_test
-
+import pandas as pd
+from scipy.stats import chisquare
+from scipy.stats import chi2_contingency
+import random
 
 def left_tailed_z_test(sample_dataset, null_hypothesis_mean, pop_variance, alpha):
     z_critical = norm.ppf(alpha)
@@ -72,3 +75,61 @@ def runs_test(sample_data):
 def sign_test_one_sample(sample_data):
     median_value = np.median(sample_data)
     sign_test(sample_data, mu0=median_value)
+
+def chi_square_good_fit_test(df, random_movies1, alpha):
+    filtered_df1_each = df[df['movieid'].isin(random_movies1)]
+    def sample_ratings(group):
+        return group.sample(n=10, random_state=42)
+
+    dataset1_each = filtered_df1_each.groupby('movieid', group_keys=False).apply(sample_ratings)
+
+    dataset1_each.loc[:,'Category'] = dataset1_each['rating'].apply(lambda x: 'Good' if x >= 3 else 'Bad')
+
+    observed_df = pd.crosstab(index=dataset1_each['Category'], columns=dataset1_each['movieid'])
+
+
+    observed_values = observed_df.iloc[1].values 
+
+    chi2_stat, p_value = chisquare(f_obs=list(observed_values))
+
+    print("Chi-square Statistic:", chi2_stat)
+    print("P-value:", p_value)
+
+    if p_value <= alpha:
+        print("Reject the null hypothesis. There is a preference by users on particular movies")
+    else:
+        print("Fail to reject the null hypothesis. There is not enough evidence of preference by users on particular movies")    
+
+def chi_square_independence_test(df, random_movies1, alpha):
+    selected_movies = random.sample(random_movies1, 2)
+    filtered_df1_each = df[df['movieid'].isin(selected_movies)]
+    def sample_ratings(group):
+        return group.sample(n=10, random_state=42)
+
+    dataset1_each = filtered_df1_each.groupby('movieid', group_keys=False).apply(sample_ratings)
+    # print(dataset1_each)
+    dataset1_each.loc[:,'Category'] = dataset1_each['rating'].apply(lambda x: 'Good' if x >= 3 else 'Bad')
+    # print(dataset1_each)
+
+    observed_df = pd.crosstab(index=dataset1_each['Category'], columns=dataset1_each['movieid'])
+    print(observed_df)
+
+    row_1 = list(observed_df.iloc[0].values) 
+    row_2 = list(observed_df.iloc[1].values )
+
+    concatenated_table=[]
+    concatenated_table.append(row_1)
+    concatenated_table.append(row_2)
+
+
+    print(concatenated_table)
+
+    res = chi2_contingency(concatenated_table)
+    chi2_stat = res.statistic
+    p_value =res.pvalue
+    print("P-value:", p_value)
+
+    if p_value <= alpha:
+        print("Reject the null hypothesis. There is a no association on movie being good and released on a particular year")
+    else:
+        print("Fail to reject the null hypothesis. There is association by users and movie being good that is released on particular day")

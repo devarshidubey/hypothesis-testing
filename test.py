@@ -1,15 +1,14 @@
-import pandas as pd
+from scipy.stats import chisquare
 import numpy as np
 
-np_arr = np.array([
-    [1, 11, 3.5, '2022-01-01'],
-    [2, 12, 4.2, '2022-01-02'],
-    [3, 13, 4.1, '2022-01-03'],
-    [4, 14, 3.8, '2022-01-04'],
-    [5, 15, 2.9, '2022-01-05'],
-    [10, 16, 4.5, '2023-11-27']
-])
+# Example observed frequencies
+observed_values = [10, 5, 7, 2, 2]
+total_obs = np.sum(observed_values)
+expected_proportions = np.ones_like(observed_values) / len(observed_values)
+exp = expected_proportions * total_obs
+# Performing the chi-square test
+chi2_stat, p_value = chisquare(f_obs=observed_values, f_exp=exp)
 
-df = pd.DataFrame(np_arr, columns=['movieid', 'userid', 'rating', 'date'])
-newdf = df[df['movieid'] == 10]
-print(newdf)
+# Displaying the results
+print("Chi-square Statistic:", chi2_stat)
+print("P-value:", p_value)

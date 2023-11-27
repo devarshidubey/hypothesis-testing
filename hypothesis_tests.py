@@ -4,6 +4,7 @@ from scipy.stats import norm
 import math
 from statsmodels.sandbox.stats.runs import runstest_1samp
 from statsmodels.stats.descriptivestats import sign_test
+from termcolor import colored
 
 
 def left_tailed_z_test(sample_dataset, null_hypothesis_mean, pop_variance, alpha):
@@ -11,27 +12,27 @@ def left_tailed_z_test(sample_dataset, null_hypothesis_mean, pop_variance, alpha
     SEM = pop_variance/math.pow(len(sample_dataset),0.5)
     z_value = (np.mean(sample_dataset)-null_hypothesis_mean)/SEM
     if z_value < z_critical:
-        print("left tailed test at alpha %.2f: Hypothesis rejected | H0: mean >= %d"%(alpha,null_hypothesis_mean))
+        print(colored("left tailed test at alpha %.2f: Hypothesis rejected | H0: mean >= %d"%(alpha,null_hypothesis_mean), 'green'))
     else:
-        print("left tailed test at alpha %.2f: Hypothesis accepted | H0: mean >= %d"%(alpha,null_hypothesis_mean))
+        print(colored("left tailed test at alpha %.2f: Hypothesis accepted | H0: mean >= %d"%(alpha,null_hypothesis_mean), 'green'))
 
 def right_tailed_z_test(sample_dataset, null_hypothesis_mean, pop_variance, alpha):
     z_critical = norm.ppf(1-alpha)
     SEM = pop_variance/math.pow(len(sample_dataset),0.5)
     z_value = (np.mean(sample_dataset)-null_hypothesis_mean)/SEM
     if z_value > z_critical:
-        print("right tailed test at alpha %.2f: Hypothesis rejected | H0: mean <= %d"%(alpha,null_hypothesis_mean))
+        print(colored("right tailed test at alpha %.2f: Hypothesis rejected | H0: mean <= %d"%(alpha,null_hypothesis_mean), 'green'))
     else:
-        print("right tailed test at alpha %.2f: Hypothesis accepted | H0: mean <= %d"%(alpha,null_hypothesis_mean))
+        print(colored("right tailed test at alpha %.2f: Hypothesis accepted | H0: mean <= %d"%(alpha,null_hypothesis_mean), 'green'))
 
 def two_tailed_z_test(sample_dataset, null_hypothesis_mean, pop_variance, alpha):
     z_critical = norm.ppf(1 - alpha/2)
     SEM = pop_variance/math.pow(len(sample_dataset),0.5)
     z_value = (np.mean(sample_dataset)-null_hypothesis_mean)/SEM
     if abs(z_value) > z_critical:
-        print("two tailed test at alpha %.2f: Hypothesis rejected | H0: mean = %d"%(alpha,null_hypothesis_mean))
+        print(colored("two tailed test at alpha %.2f: Hypothesis rejected | H0: mean = %d"%(alpha,null_hypothesis_mean), 'green'))
     else:
-        print("two tailed test at alpha %.2f: Hypothesis accepted | H0: mean = %d"%(alpha,null_hypothesis_mean))
+        print(colored("two tailed test at alpha %.2f: Hypothesis accepted | H0: mean = %d"%(alpha,null_hypothesis_mean), 'green'))
 
 
 def two_sample_test(sample_dataset, sample_dataset_2, alpha):
@@ -45,9 +46,9 @@ def two_sample_test(sample_dataset, sample_dataset_2, alpha):
     z_value = (np.mean(sample_dataset)-np.mean(sample_dataset_2))/SE
 
     if abs(z_value) > z_critical:
-        print("two sample z test at alpha %.2f: Hypothesis rejected | H0: mean1 = mean2"%alpha)
+        print(colored("two sample z test at alpha %.2f: Hypothesis rejected | H0: mean1 = mean2"%alpha, 'green'))
     else:
-        print("two sample z test at alpha %.2f: Hypothesis accepted | H0: mean1 = mean2"%alpha)
+        print(colored("two sample z test at alpha %.2f: Hypothesis accepted | H0: mean1 = mean2"%alpha, 'green'))
 
 def two_sample_t_value_test(sample_dataset, sample_dataset_2, alpha):
     df = 10
@@ -59,16 +60,31 @@ def two_sample_t_value_test(sample_dataset, sample_dataset_2, alpha):
     t_value = (np.mean(sample_dataset)-np.mean(sample_dataset_2))/SE
 
     if abs(t_value) > t_critical:
-        print("two sample t test at alpha %.2f: Hypothesis rejected | H0: mean1 = mean2"%alpha)
+        print(colored("two sample t test at alpha %.2f: Hypothesis rejected | H0: mean1 = mean2"%alpha, 'green'))
     else:
-        print("two sample t test at alpha %.2f: Hypothesis accepted | H0: mean1 = mean2"%alpha)
+        print(colored("two sample t test at alpha %.2f: Hypothesis accepted | H0: mean1 = mean2"%alpha, 'green'))
 
 def runs_test(sample_data):
     median_value = np.median(sample_data)
     binary_data = [1 if x > median_value else 0 for x in sample_data]
-    result = runstest_1samp(binary_data)
-    print("Result:", "The sample is not random" if result[1] < 0.05 else "The sample is random")
 
-def sign_test_one_sample(sample_data):
-    median_value = np.median(sample_data)
-    sign_test(sample_data, mu0=median_value)
+    runs_count = 0
+    current_run = None
+
+    for bit in binary_data:
+        if bit != current_run:
+            runs_count += 1
+            current_run = bit
+
+    print("Number of runs: ", runs_count)
+    result = runstest_1samp(binary_data, cutoff='median')
+
+    print(colored("Result at alpha = 0.05:", "The sample is not random" if result[1] < 0.05 else "The sample is random", 'green'))
+
+def sign_test_one_sample(sample_data, hyp_median, alpha):
+    _, p_value = sign_test(sample_data, mu0=hyp_median)
+
+    if p_value <= alpha:
+        print(colored("one sample sign test at alpha %.2f: Hypothesis rejected | H0: median=%.1f"%(alpha, hyp_median), 'green'))
+    else:
+        print(colored("one sample sign test at alpha %.2f: Hypothesis accepted | H0: median=%.1f"%(alpha, hyp_median), 'green'))

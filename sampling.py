@@ -54,7 +54,7 @@ def get_sample(filename, random_cluster, sample_size): #returns a list of user r
     return random_data
 
 def population_mean1(): #average ratings for movies before year 2000
-    random_movies = movies.select_random_movies1('movie_titles.csv', 100) #choose 100 random movies
+    random_movies = movies.select_random_movies1('movie_titles.csv', 5) #choose 100 random movies
     dataset = read_csv_file_dataset(filename = 'combined_data_1.csv', random_cluster= random_movies) #return a list of dictionaries containing the ratings, group
     sample_distribution = []
     current_group = dataset[0]['Group']
@@ -72,7 +72,7 @@ def population_mean1(): #average ratings for movies before year 2000
     return sum(sample_distribution)/len(sample_distribution)
 
 def population_mean2(): #average ratings for movies before year 2000
-    random_movies = movies.select_random_movies2('movie_titles.csv', 100) #choose 100 random movies
+    random_movies = movies.select_random_movies2('movie_titles.csv', 5) #choose 100 random movies
     dataset = read_csv_file_dataset(filename = 'combined_data_1.csv', random_cluster= random_movies) #return a list of dictionaries containing the ratings, group
     sample_distribution = []
     current_group = dataset[0]['Group']
@@ -90,7 +90,7 @@ def population_mean2(): #average ratings for movies before year 2000
     return sum(sample_distribution)/len(sample_distribution)
 
 def population_variance1(pop_mean):
-    random_movies = movies.select_random_movies1('movie_titles.csv', 100) #choose 100 random movies
+    random_movies = movies.select_random_movies1('movie_titles.csv', 5) #choose 100 random movies
     dataset = read_csv_file_dataset(filename = 'combined_data_1.csv', random_cluster= random_movies)
     sample_distribution = []
     current_group = dataset[0]['Group']
@@ -109,7 +109,7 @@ def population_variance1(pop_mean):
     return sum(sample_distribution)/len(sample_distribution)
 
 def population_variance2(pop_mean):
-    random_movies = movies.select_random_movies2('movie_titles.csv', 100) #choose 100 random movies
+    random_movies = movies.select_random_movies2('movie_titles.csv',  5.) #choose 100 random movies
     dataset = read_csv_file_dataset(filename = 'combined_data_1.csv', random_cluster= random_movies)
     sample_distribution = []
     current_group = dataset[0]['Group']
@@ -127,30 +127,69 @@ def population_variance2(pop_mean):
             
     return sum(sample_distribution)/len(sample_distribution)
 
+# def create_dataframe(csv_file):
+#     data = []
+#     with open(csv_file, 'r') as file:
+#         for line in file:
+#             line = line.strip()
+#             if line.endswith(':'):
+#                 # Extract the movie_id from the line (assuming it's followed by a colon)
+#                 movie_id = int(line.split(':')[0])
+                
+#                 # Extract lines until the next colon is encountered
+#                 columns_lines = []
+#                 for next_line in file:
+#                     next_line = next_line.strip()
+#                     if next_line.endswith(':'):
+#                         # If the next line starts with a new movie_id, break the loop
+#                         break
+#                     else:
+#                         # Split the line into a list, append the movie_id to each element, and join them back to a string
+#                         columns_lines.append(','.join([str(movie_id)] + next_line.split(',')))
+
+#                 # Append the columns_lines to the data list
+#                 data.extend([line.split(',') for line in columns_lines])
+
+#     df = pd.DataFrame(data, columns=['movieid', 'userid', 'rating', 'date'])
+#     df['rating'] = df['rating'].astype(int)
+
+#     return df
+
 def create_dataframe(csv_file):
     data = []
+
     with open(csv_file, 'r') as file:
-        for line in file:
-            line = line.strip()
+        lines = file.readlines()
+        i = 0
+
+        while i < len(lines):
+            line = lines[i].strip()
+
             if line.endswith(':'):
                 # Extract the movie_id from the line (assuming it's followed by a colon)
                 movie_id = int(line.split(':')[0])
-                
+
                 # Extract lines until the next colon is encountered
                 columns_lines = []
-                for next_line in file:
-                    next_line = next_line.strip()
+
+                i += 1  # Move to the next line
+                while i < len(lines):
+                    next_line = lines[i].strip()
+
                     if next_line.endswith(':'):
-                        # If the next line starts with a new movie_id, break the loop
+                        # If the next line starts with a new movie_id, break the inner loop
                         break
                     else:
                         # Split the line into a list, append the movie_id to each element, and join them back to a string
                         columns_lines.append(','.join([str(movie_id)] + next_line.split(',')))
 
+                    i += 1  # Move to the next line
+
                 # Append the columns_lines to the data list
                 data.extend([line.split(',') for line in columns_lines])
 
+# Now 'data' contains all the lines with movie_id appended, and you can process it further
+
     df = pd.DataFrame(data, columns=['movieid', 'userid', 'rating', 'date'])
     df['rating'] = df['rating'].astype(int)
-
     return df
